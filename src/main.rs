@@ -111,7 +111,7 @@ impl Evolution {
             .fold(0.0, |a, b| a.max(b))
     }
 
-    fn advance(&mut self) {
+    pub fn advance(&mut self) {
         self.advance_crossover();
         self.advance_mutation();
     }
