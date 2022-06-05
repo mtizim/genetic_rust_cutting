@@ -1,6 +1,7 @@
 use std::ops::Sub;
 
 use std::ops::Add;
+use std::path::Path;
 
 #[derive(Clone, Copy)]
 pub struct Pos {
@@ -72,7 +73,7 @@ impl Sub for Pos {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Quadrant {
     First,
     Second,
@@ -95,7 +96,7 @@ pub struct Circle {
     // 0,0 assumed center
     pub radius: f32,
 }
-
+#[derive(Clone, Copy)]
 pub struct Rect {
     pub center: Pos,
     pub area: f32,
@@ -124,8 +125,8 @@ impl Rect {
         let halfwidth = width / 2.0;
         let halfheight = height / 2.0;
         let norm_val = (value - minvalue) / (maxvalue - minvalue);
-        // [0; 0.6] probabilities
-        let mut_prob = ((1.0 - norm_val).exp() / std::f32::consts::E) * 0.6;
+        let mut_prob = ((1.0 - norm_val).exp() / std::f32::consts::E) * 0.004 + 0.001;
+
         Rect {
             center: *center,
             area,
@@ -134,22 +135,23 @@ impl Rect {
             quadrant: center.quadrant(),
             height,
             width,
-            topleft: center.add_x(halfwidth).add_y(halfheight),
+            topleft: center.add_x(-halfwidth).add_y(halfheight),
             topright: center.add_x(halfwidth).add_y(halfheight),
-            bottomleft: center.add_x(halfwidth).add_y(halfheight),
-            bottomright: center.add_x(halfwidth).add_y(halfheight),
+            bottomleft: center.add_x(-halfwidth).add_y(-halfheight),
+            bottomright: center.add_x(halfwidth).add_y(-halfheight),
             mut_prob,
         }
     }
     pub fn overlaps(&self, other: &Rect) -> bool {
         let relation = (other.center - self.center).quadrant();
         let corner_vert_relation = match relation {
-            Quadrant::First => (self.topright - other.bottomleft).quadrant(),
-            Quadrant::Second => (self.topleft - other.bottomright).quadrant(),
-            Quadrant::Third => (self.bottomleft - other.topright).quadrant(),
-            Quadrant::Fourth => (self.bottomright - other.topleft).quadrant(),
+            Quadrant::First => (other.bottomleft - self.topright).quadrant(),
+            Quadrant::Second => (other.bottomright - self.topleft).quadrant(),
+            Quadrant::Third => (other.topright - self.bottomleft).quadrant(),
+            Quadrant::Fourth => (other.topleft - self.bottomright).quadrant(),
         };
-        relation == corner_vert_relation.opposite()
+
+        !(relation == corner_vert_relation)
     }
     pub fn covers(&self, other: &ViableRect) -> bool {
         // assuming same center
@@ -169,6 +171,7 @@ impl Circle {
             Quadrant::Third => rect.bottomleft,
             Quadrant::Fourth => rect.bottomright,
         };
+
         vert.magn() <= self.radius
     }
     pub fn contains_point(&self, pos: &Pos) -> bool {
@@ -180,12 +183,79 @@ pub struct ViableRect {
     pub height: f32,
     pub width: f32,
     pub value: f32,
+    pub avgvalue: f32,
+    pub pick_proba: f32,
 }
 
-pub struct ViableRectData<'a> {
+impl ViableRect {
+    pub fn new(height: f32, width: f32, value: f32, pick_proba: f32) -> ViableRect {
+        ViableRect {
+            height,
+            width,
+            value,
+            avgvalue: height * width / value,
+            pick_proba,
+        }
+    }
+}
+
+pub struct TaskData {
     pub min_value: f32,
     pub max_value: f32,
     pub max_width: f32,
     pub max_height: f32,
-    pub rects: &'a Vec<ViableRect>,
+    pub circle: Circle,
+    pub rects: Vec<ViableRect>,
+}
+
+impl TaskData {
+    pub fn from_file<P: AsRef<std::path::Path>>(r: f32, path: P) -> TaskData {
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .from_path(path)
+            .expect("Path existence");
+
+        let mut rects: Vec<ViableRect> = Vec::new();
+
+        let mut minv = f32::INFINITY;
+        let mut maxv = 0.0;
+
+        let mut maxw = 0.0;
+        let mut maxh = 0.0;
+        let mut sval = 0.0;
+
+        for result in reader.records() {
+            let record = result.expect("a CSV record");
+
+            let w: f32 = (&record[0]).parse().expect("Formatting");
+            let h: f32 = (&record[1]).parse().expect("Formatting");
+            let val: f32 = (&record[2]).parse().expect("Formatting");
+
+            if (val < minv) {
+                minv = val;
+            }
+            if (val > maxv) {
+                maxv = val;
+            }
+
+            if (w > maxw) {
+                maxw = w;
+            }
+            if (h > maxh) {
+                maxh = h;
+            }
+            sval += val;
+            rects.push(ViableRect::new(h, w, val, 0.0))
+        }
+
+        rects.sort_by(|a, b| a.value.partial_cmp(&b.value).unwrap());
+        TaskData {
+            min_value: minv,
+            max_value: maxv,
+            max_width: maxw,
+            max_height: maxh,
+            circle: Circle { radius: r },
+            rects,
+        }
+    }
 }
