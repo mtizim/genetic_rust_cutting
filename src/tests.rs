@@ -1,6 +1,6 @@
+#[cfg(test)]
 use crate::basic_structs::Rect;
 
-#[cfg(test)]
 #[test]
 fn circle_collisions() {
     use crate::basic_structs::{Circle, Pos};
@@ -61,19 +61,18 @@ fn circle_collisions_rect4() {
 }
 #[test]
 fn rect_collision_test() {
-    use crate::basic_structs::{Circle, Pos};
+    use crate::basic_structs::Pos;
 
     let rc = Pos { x: 0.0, y: 0.0 };
     let r = Rect::new(&rc, 2.0, 0.5, 0.0, 0.0, 0.0);
 
-    let rc2 = Pos { x: 0.0, y: 0.0 };
     let r2 = Rect::new(&rc, 2.0, 0.5, 0.0, 0.0, 0.0);
 
     assert!(r.overlaps(&r2))
 }
 #[test]
 fn rect_collision_test2() {
-    use crate::basic_structs::{Circle, Pos};
+    use crate::basic_structs::Pos;
 
     let rc = Pos { x: 0.0, y: 0.0 };
     let r = Rect::new(&rc, 1.0, 1.0, 0.0, 0.0, 0.0);
@@ -85,7 +84,7 @@ fn rect_collision_test2() {
 }
 #[test]
 fn rect_collision_test3() {
-    use crate::basic_structs::{Circle, Pos};
+    use crate::basic_structs::Pos;
 
     let rc = Pos { x: 0.0, y: 0.0 };
     let r = Rect::new(&rc, 1.0, 1.0, 0.0, 0.0, 0.0);
@@ -97,7 +96,7 @@ fn rect_collision_test3() {
 }
 #[test]
 fn rect_collision_test4() {
-    use crate::basic_structs::{Circle, Pos};
+    use crate::basic_structs::Pos;
 
     let rc = Pos { x: 0.0, y: 0.0 };
     let r = Rect::new(&rc, 1.0, 1.0, 0.0, 0.0, 0.0);
@@ -109,7 +108,7 @@ fn rect_collision_test4() {
 }
 #[test]
 fn vlinetest() {
-    use crate::basic_structs::{Circle, Pos};
+    use crate::basic_structs::Pos;
 
     let rc = Pos { x: 0.0, y: 0.0 };
     let r = Rect::new(&rc, 1.0, 1.0, 0.0, 0.0, 0.0);

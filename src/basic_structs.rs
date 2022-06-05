@@ -1,7 +1,6 @@
 use std::ops::Sub;
 
 use std::ops::Add;
-use std::path::Path;
 
 #[derive(Clone, Copy)]
 pub struct Pos {
@@ -79,17 +78,6 @@ pub enum Quadrant {
     Second,
     Third,
     Fourth,
-}
-
-impl Quadrant {
-    pub(crate) fn opposite(&self) -> Quadrant {
-        match self {
-            Quadrant::First => Quadrant::Third,
-            Quadrant::Second => Quadrant::Fourth,
-            Quadrant::Third => Quadrant::First,
-            Quadrant::Fourth => Quadrant::Second,
-        }
-    }
 }
 
 pub struct Circle {
@@ -222,7 +210,6 @@ impl TaskData {
 
         let mut maxw = 0.0;
         let mut maxh = 0.0;
-        let mut sval = 0.0;
 
         for result in reader.records() {
             let record = result.expect("a CSV record");
@@ -231,20 +218,19 @@ impl TaskData {
             let h: f32 = (&record[1]).parse().expect("Formatting");
             let val: f32 = (&record[2]).parse().expect("Formatting");
 
-            if (val < minv) {
+            if val < minv {
                 minv = val;
             }
-            if (val > maxv) {
+            if val > maxv {
                 maxv = val;
             }
 
-            if (w > maxw) {
+            if w > maxw {
                 maxw = w;
             }
-            if (h > maxh) {
+            if h > maxh {
                 maxh = h;
             }
-            sval += val;
             rects.push(ViableRect::new(h, w, val, 0.0))
         }
 

@@ -1,7 +1,6 @@
-#![allow(unused)]
-use std::{iter::zip, path::Path};
+use std::iter::zip;
 
-use basic_structs::{Circle, Pos, Rect, TaskData, ViableRect};
+use basic_structs::{Pos, Rect, TaskData};
 use rand::prelude::SliceRandom;
 use rayon::prelude::*;
 mod basic_structs;
@@ -76,7 +75,6 @@ fn main() {
     {
         println!("R850");
         let mut evo = Evolution::new(256, 850_f32, "cutting/r850.csv");
-        let mut i = 0;
         for i in 0..50000 {
             evo.advance();
             if i % 1000 == 0 {
@@ -142,7 +140,7 @@ impl Evolution {
     fn advance_mutation(&mut self) {
         self.population
             .par_iter_mut()
-            .for_each(|mut c| c.mutate(&self.task_data));
+            .for_each(|c| c.mutate(&self.task_data));
     }
 }
 
@@ -185,7 +183,7 @@ impl Chromosome {
                         .collect();
                     let mut rects_s: Vec<usize> = (0..task_data.rects.len()).collect();
                     rects_s.shuffle(&mut rand::thread_rng());
-                    'find_viable: for viable_rect_idx in rects_s {
+                    for viable_rect_idx in rects_s {
                         let viable_rect = &task_data.rects[viable_rect_idx];
                         let dx = normal.sample(&mut rand::thread_rng());
                         let dy = normal.sample(&mut rand::thread_rng());
@@ -197,9 +195,9 @@ impl Chromosome {
                             task_data.min_value,
                             task_data.max_value,
                         );
-                        if (task_data.circle.contains(&new_rect)
+                        if task_data.circle.contains(&new_rect)
                             && (self.rects[i].covers(viable_rect)
-                                || !viable_overlaps.iter().any(|r| r.overlaps(&new_rect))))
+                                || !viable_overlaps.iter().any(|r| r.overlaps(&new_rect)))
                         {
                             self.rects[i] = new_rect;
                             continue 'iter_rect;
@@ -280,7 +278,7 @@ impl Chromosome {
         let mut self_left = Vec::with_capacity(self_rects_len / 2);
         let mut self_right = Vec::with_capacity(self_rects_len / 2);
         for r in self_without_line {
-            if (r.center.x <= slice_x) {
+            if r.center.x <= slice_x {
                 self_left.push(r)
             } else {
                 self_right.push(r)
@@ -289,7 +287,7 @@ impl Chromosome {
         let mut other_left = Vec::with_capacity(other_rects_len / 2);
         let mut other_right = Vec::with_capacity(other_rects_len / 2);
         for r in other_without_line {
-            if (r.center.x <= slice_x) {
+            if r.center.x <= slice_x {
                 other_left.push(r)
             } else {
                 other_right.push(r)
